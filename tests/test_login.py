@@ -1,15 +1,15 @@
 import pytest
 from playwright.sync_api import sync_playwright
+from pages.login_page import LoginPage
 
 def test_valid_login():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
         page = browser.new_page()
         
-        page.goto("https://www.saucedemo.com")
-        page.fill("#user-name", "standard_user")
-        page.fill("#password", "secret_sauce")
-        page.click("#login-button")
+        login_page = LoginPage(page)
+        login_page.goto()
+        login_page.login("standard_user", "secret_sauce")
         
         assert page.url == "https://www.saucedemo.com/inventory.html"
         
@@ -20,14 +20,12 @@ def test_locked_out_user():
         browser = p.chromium.launch(headless=False)
         page = browser.new_page()
         
-        page.goto("https://www.saucedemo.com")
-        page.fill("#user-name", "locked_out_user")
-        page.fill("#password", "secret_sauce")
-        page.click("#login-button")
+        login_page = LoginPage(page)
+        login_page.goto()
+        login_page.login("locked_out_user", "secret_sauce")
         
-        error = page.locator("[data-test='error']")
-        assert error.is_visible()
-        
+        assert login_page.get_error().is_visible()
+
         browser.close()
 
 def test_wrong_password():
@@ -35,12 +33,10 @@ def test_wrong_password():
         browser = p.chromium.launch(headless=False)
         page = browser.new_page()
         
-        page.goto("https://www.saucedemo.com")
-        page.fill("#user-name", "standard_user")
-        page.fill("#password", "wrongpassword")
-        page.click("#login-button")
+        login_page = LoginPage(page)
+        login_page.goto()
+        login_page.login("standard_user", "wrongpassword")
         
-        error = page.locator("[data-test='error']")
-        assert error.is_visible()
+        assert login_page.get_error().is_visible()
         
         browser.close()
